@@ -1,3 +1,12 @@
+![Status](https://img.shields.io/badge/status-active_development-orange)
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![React](https://img.shields.io/badge/React-19-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+
 # Growlog
 
 Growlog is a full-stack productivity tracker for converting daily intent into durable execution logs. Users can register, add and complete tasks, review weekly or monthly analytics, and optionally sync generated progress logs to a GitHub repository.
