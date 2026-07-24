@@ -22,6 +22,9 @@ from backend.utils.rate_limit import limiter
 from backend.middleware.request_id import RequestIDMiddleware
 from backend.utils.request_context import get_request_id
 
+from sqlalchemy import text
+from backend.database import engine
+
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
@@ -39,6 +42,31 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+@app.get("/ready", tags=["Infrastructure"])
+def readiness():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+
+        return {
+            "status": "ready",
+            "database": "connected",
+            "service": "Growlog API",
+            "environment": ENVIRONMENT,
+        }
+
+    except Exception as exc:
+        logger.exception("Readiness check failed")
+
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "database": "unavailable",
+                "detail": str(exc),
+            },
+        )
 
 @app.get("/health", tags=["Infrastructure"])
 def health():
