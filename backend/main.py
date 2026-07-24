@@ -19,6 +19,12 @@ from backend.config import LOG_LEVEL
 from slowapi.middleware import SlowAPIMiddleware
 from backend.utils.rate_limit import limiter
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+from backend.middleware.request_id import RequestIDMiddleware
+from backend.utils.request_context import get_request_id
+
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
@@ -40,6 +46,7 @@ app = FastAPI(
 app.state.limiter = limiter
 
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 _cors_origins_raw = os.getenv("GROWLOG_CORS_ORIGINS", "http://localhost:3000")
 _cors_origins = [
@@ -59,10 +66,7 @@ app.add_middleware(
 
 
 def _get_request_id(request: Request) -> str:
-    request_id = getattr(request.state, "request_id", None)
-    if request_id:
-        return request_id
-    return str(uuid.uuid4())
+    return get_request_id()
 
 
 def _error_response(
@@ -87,37 +91,6 @@ def _error_response(
         content=payload.model_dump(exclude_none=True),
         headers={"X-Request-ID": request_id},
     )
-
-
-@app.middleware("http")
-async def add_request_context(request: Request, call_next):
-    request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
-    request.state.request_id = request_id
-    start = time.perf_counter()
-
-    try:
-        response = await call_next(request)
-    except Exception:
-        logger.exception(
-            "Unhandled request failure request_id=%s method=%s path=%s",
-            request_id,
-            request.method,
-            request.url.path,
-        )
-        raise
-
-    duration_ms = round((time.perf_counter() - start) * 1000, 2)
-    response.headers["X-Request-ID"] = request_id
-    logger.info(
-        "request_id=%s method=%s path=%s status_code=%s duration_ms=%s",
-        request_id,
-        request.method,
-        request.url.path,
-        response.status_code,
-        duration_ms,
-    )
-    return response
-
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
