@@ -14,13 +14,10 @@ from backend.models.user import User
 from backend.models.task import Task
 from backend.routers import auth, tasks, analytics
 from backend.schemas.common import ErrorResponse
-from backend.config import LOG_LEVEL
+from backend.config import LOG_LEVEL, ENVIRONMENT
 
 from slowapi.middleware import SlowAPIMiddleware
 from backend.utils.rate_limit import limiter
-
-from fastapi import Request
-from fastapi.responses import JSONResponse
 
 from backend.middleware.request_id import RequestIDMiddleware
 from backend.utils.request_context import get_request_id
@@ -42,6 +39,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+@app.get("/health", tags=["Infrastructure"])
+def health():
+    return {
+        "status": "healthy",
+        "service": "Growlog API",
+        "environment": ENVIRONMENT,
+    }
 
 app.state.limiter = limiter
 
