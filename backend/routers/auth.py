@@ -46,18 +46,35 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=AuthTokenResponse)
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
+    db: Session = Depends(get_db),
+    ):
+    invalid_credentials = HTTPException(
+        status_code=401,
+        detail="Invalid username or password",
+    )
 
-    user = db.query(User).filter(User.username == form_data.username).first()
+    user = (
+        db.query(User)
+        .filter(User.username == form_data.username)
+        .first()
+    )
 
-    if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if user is None:
+        raise invalid_credentials
 
-    access_token = create_access_token(data={"sub": user.username})
+    if not verify_password(form_data.password, user.password_hash):
+        raise invalid_credentials
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    access_token = create_access_token(
+        {
+            "sub": str(user.username),
+        }
+    )
 
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
 
 @router.post("/set-repo", response_model=MessageResponse)
 def set_github_repo(
