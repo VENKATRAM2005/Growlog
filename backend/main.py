@@ -16,6 +16,9 @@ from backend.routers import auth, tasks, analytics
 from backend.schemas.common import ErrorResponse
 from backend.config import LOG_LEVEL
 
+from slowapi.middleware import SlowAPIMiddleware
+from backend.utils.rate_limit import limiter
+
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
     format="%(asctime)s %(levelname)s %(name)s %(message)s",
@@ -33,6 +36,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+
+app.add_middleware(SlowAPIMiddleware)
 
 _cors_origins_raw = os.getenv("GROWLOG_CORS_ORIGINS", "http://localhost:3000")
 _cors_origins = [
