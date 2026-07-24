@@ -12,20 +12,37 @@ import {
 } from "recharts"
 
 import AppSurface from "../shared/AppSurface"
+import { ErrorState, LoadingState } from "../shared/PageState"
 import { useWeeklyAnalytics } from "../../features/analytics/hooks"
 
 export default function WeeklyActivityGraph() {
   const { data, isLoading, isError, error } = useWeeklyAnalytics()
 
   if (isLoading) {
-    return <AppSurface className="text-sm text-muted-foreground">Loading weekly analytics...</AppSurface>
+    return (
+      <AppSurface>
+        <LoadingState
+          className="min-h-[320px] border-none bg-transparent px-0 py-0"
+          title="Loading weekly activity"
+          description="Pulling the latest seven-day close pattern."
+        />
+      </AppSurface>
+    )
   }
 
   if (isError) {
     const status = (error as { response?: { status?: number } })?.response?.status
     return (
-      <AppSurface className="text-sm text-muted-foreground">
-        {status === 401 ? "Please log in to view analytics." : "Failed to load analytics."}
+      <AppSurface>
+        <ErrorState
+          className="min-h-[320px] border-none bg-transparent px-0 py-0"
+          title={status === 401 ? "Sign in required" : "Weekly activity unavailable"}
+          description={
+            status === 401
+              ? "Please sign in again to see your activity data."
+              : "We couldn't load the weekly activity graph right now."
+          }
+        />
       </AppSurface>
     )
   }

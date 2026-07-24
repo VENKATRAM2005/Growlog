@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import api from "../../api/client"
 import ThemeToggle from "../../components/theme/ThemeToggle"
+import { getApiErrorMessage } from "../../lib/api-error"
 
 export default function SetupRepoPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -50,14 +51,7 @@ export default function SetupRepoPage() {
       setConnectedRepo(repoUrl)
       setSuccess("Repository connected successfully.")
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: { data?: { detail?: string } } }).response?.data?.detail === "string"
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : "Failed to save repository"
-      setError(detail)
+      setError(getApiErrorMessage(err, "Failed to save repository"))
     } finally {
       setIsSaving(false)
     }
@@ -135,6 +129,7 @@ export default function SetupRepoPage() {
               <div className="relative">
                 <Link2 className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-primary" />
                 <Input
+                  aria-label="GitHub repository URL"
                   placeholder="https://github.com/user/growlog-archive.git"
                   value={repoUrl}
                   onChange={(event) => setRepoUrl(event.target.value)}

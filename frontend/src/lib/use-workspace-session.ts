@@ -1,0 +1,43 @@
+"use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+
+import { getToken } from "./auth"
+import { useCurrentUser } from "../features/user/hooks"
+
+type WorkspaceSessionOptions = {
+  requireRepo?: boolean
+}
+
+export function useWorkspaceSession(options: WorkspaceSessionOptions = {}) {
+  const { requireRepo = false } = options
+  const router = useRouter()
+  const token = getToken()
+  const userQuery = useCurrentUser(Boolean(token))
+
+  useEffect(() => {
+    if (!token) {
+      router.replace("/login")
+      return
+    }
+
+    if (userQuery.isError) {
+      router.replace("/login")
+      return
+    }
+
+    if (requireRepo && userQuery.data && !userQuery.data.github_repo) {
+      router.replace("/setup-repo")
+    }
+  }, [requireRepo, router, token, userQuery.data, userQuery.isError])
+
+  return {
+    token,
+    user: userQuery.data,
+    isCheckingSession: Boolean(token) && userQuery.isLoading,
+    requiresSetup: requireRepo && Boolean(userQuery.data && !userQuery.data.github_repo),
+    isAuthenticated: Boolean(token && userQuery.data),
+    error: userQuery.error,
+  }
+}

@@ -2,30 +2,47 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { BarChart3, Github, LayoutDashboard, LogOut, Settings2, Sparkles } from "lucide-react"
+import { BarChart3, FileText, ListTodo, LogOut, Settings2, Sparkles, TimerReset } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useCompletedTasks, usePendingTasks } from "../../features/tasks/hooks"
+import { useMonthlyAnalytics, useWeeklyAnalytics } from "../../features/analytics/hooks"
 import { clearToken } from "../../lib/auth"
+import { calculateMomentumScore, calculateStreak } from "../../lib/product-metrics"
 import ThemeToggle from "../theme/ThemeToggle"
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/settings", label: "Workspace", icon: Settings2 },
-  { href: "/setup-repo", label: "Repo Sync", icon: Github },
+  { href: "/today", label: "Today", icon: TimerReset },
+  { href: "/tasks", label: "Tasks", icon: ListTodo },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/archive", label: "Archive", icon: FileText },
+  { href: "/settings", label: "Settings", icon: Settings2 },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { data: pendingTasks } = usePendingTasks()
+  const { data: completedTasks } = useCompletedTasks()
+  const { data: weeklyAnalytics } = useWeeklyAnalytics()
+  const { data: monthlyAnalytics } = useMonthlyAnalytics()
+
+  const momentumScore = calculateMomentumScore({
+    weekly: weeklyAnalytics,
+    completedTasks,
+    pendingTasks,
+  })
+  const streak = calculateStreak(weeklyAnalytics, monthlyAnalytics)
+  const weeklyCompleted = weeklyAnalytics?.completed_counts.reduce((sum, count) => sum + count, 0) ?? 0
 
   return (
-    <aside className="glass-panel flex h-full flex-col rounded-[2rem] border-white/10 bg-sidebar/70 p-5">
+    <aside className="glass-panel hidden h-full flex-col rounded-[2rem] border-white/10 bg-sidebar/70 p-5 xl:flex">
       <div className="flex items-center justify-between">
         <div>
           <div className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">
             Growlog
           </div>
-          <div className="mt-2 text-2xl font-semibold">Builder OS</div>
+          <div className="mt-2 text-2xl font-semibold">Momentum OS</div>
         </div>
         <ThemeToggle />
       </div>
@@ -35,12 +52,15 @@ export default function Sidebar() {
           <Sparkles className="size-3.5" />
           Momentum mode
         </div>
-        <div className="mt-4 text-3xl font-semibold">87</div>
+        <div className="mt-4 text-3xl font-semibold">{momentumScore}</div>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Focus score based on your recent completion rhythm and backlog pressure.
+          A live score built from completion pace, backlog pressure, and consistency.
         </p>
         <div className="mt-5 h-2 rounded-full bg-muted">
-          <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-primary via-chart-2 to-chart-4" />
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-primary via-chart-2 to-chart-4"
+            style={{ width: `${Math.max(12, momentumScore)}%` }}
+          />
         </div>
       </div>
 
@@ -73,11 +93,11 @@ export default function Sidebar() {
         <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-2xl bg-background/65 p-4">
             <div className="text-muted-foreground">Completed</div>
-            <div className="mt-2 text-2xl font-semibold">12</div>
+            <div className="mt-2 text-2xl font-semibold">{weeklyCompleted}</div>
           </div>
           <div className="rounded-2xl bg-background/65 p-4">
             <div className="text-muted-foreground">Streak</div>
-            <div className="mt-2 text-2xl font-semibold">11d</div>
+            <div className="mt-2 text-2xl font-semibold">{streak}d</div>
           </div>
         </div>
       </div>

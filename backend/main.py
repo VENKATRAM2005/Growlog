@@ -14,7 +14,12 @@ from backend.models.user import User
 from backend.models.task import Task
 from backend.routers import auth, tasks, analytics
 from backend.schemas.common import ErrorResponse
+from backend.config import LOG_LEVEL
 
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 logger = logging.getLogger("growlog.api")
 
 @asynccontextmanager

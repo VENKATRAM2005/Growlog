@@ -1,14 +1,17 @@
 import calendar
+import logging
 import os
 from datetime import date, datetime
 
 from sqlalchemy.orm import Session
 
 from backend.models.task import Task, TaskStatus
+from backend.config import ENABLE_GIT_PUSH
 from backend.services.git_service import git_commit_and_push
 
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+logger = logging.getLogger("growlog.logs")
 
 
 def _daily_file_paths(user, target_date: date) -> list[str]:
@@ -111,12 +114,19 @@ def regenerate_logs(
         with open(path, "w", encoding="utf-8") as file_obj:
             file_obj.write(monthly_content)
 
-    if trigger_git and user.github_repo:
-        git_commit_and_push(
-            user.github_repo,
-            user.username,
-            f"Growlog update {target_date}",
-        )
+    if trigger_git and ENABLE_GIT_PUSH and user.github_repo:
+        try:
+            git_commit_and_push(
+                user.github_repo,
+                user.username,
+                f"Growlog update {target_date}",
+            )
+        except Exception:
+            logger.exception(
+                "log sync failed user=%s target_date=%s",
+                user.username,
+                target_date,
+            )
 
     return {
         "daily": daily_paths,

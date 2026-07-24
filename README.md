@@ -97,11 +97,14 @@ The frontend runs at `http://localhost:3000`.
 
 Backend configuration is environment-driven:
 
+- `GROWLOG_ENV`
 - `GROWLOG_DATABASE_URL`
 - `GROWLOG_JWT_SECRET`
 - `GROWLOG_JWT_ALGORITHM`
 - `GROWLOG_ACCESS_TOKEN_EXPIRE_MINUTES`
 - `GROWLOG_CORS_ORIGINS`
+- `GROWLOG_LOG_LEVEL`
+- `GROWLOG_ENABLE_GIT_PUSH`
 
 Example:
 
@@ -109,7 +112,15 @@ Example:
 $env:GROWLOG_DATABASE_URL="postgresql://postgres:postgres123@localhost:5432/growlog"
 $env:GROWLOG_JWT_SECRET="replace-me"
 $env:GROWLOG_CORS_ORIGINS="http://localhost:3000"
+$env:GROWLOG_ENV="development"
 ```
+
+Security notes:
+
+- `GROWLOG_JWT_SECRET` is required in staging and production. Development still boots with a fallback secret, but it logs a warning and should not be relied on outside local work.
+- `GROWLOG_DATABASE_URL` is required in staging and production.
+- Repository sync now accepts only `https://github.com/<owner>/<repo>` style URLs and normalizes them to a `.git` remote.
+- `GROWLOG_ENABLE_GIT_PUSH=false` disables outbound git pushes while keeping local log generation intact.
 
 ## Testing
 
@@ -147,6 +158,7 @@ Core endpoints:
 - Task creation accepts batched input and normalizes titles consistently before persistence.
 - Tests pin the backend to an isolated SQLite database so CI and local runs are deterministic.
 - Error responses now use a consistent envelope and every response includes an `X-Request-ID` header for tracing.
+- Git automation is time-bounded and best-effort so a remote push cannot hang the request path indefinitely.
 
 ## Roadmap
 

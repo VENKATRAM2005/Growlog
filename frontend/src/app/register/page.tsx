@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import api from "../../api/client"
 import AuthShell from "../../components/shared/AuthShell"
+import { getApiErrorMessage } from "../../lib/api-error"
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("")
@@ -23,14 +24,7 @@ export default function RegisterPage() {
       await api.post("/register", { username, password })
       router.push("/login")
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: { data?: { detail?: string } } }).response?.data?.detail === "string"
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : "Registration failed. Try a different username."
-      setError(detail)
+      setError(getApiErrorMessage(err, "Registration failed. Try a different username."))
     } finally {
       setIsSubmitting(false)
     }

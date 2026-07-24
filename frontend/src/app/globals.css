@@ -48,6 +48,8 @@
 }
 
 :root {
+  --font-manrope: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-space-grotesk: "Trebuchet MS", "Avenir Next", "Segoe UI", sans-serif;
   --radius: 1.25rem;
   --background: #f4f0e8;
   --foreground: #18181b;

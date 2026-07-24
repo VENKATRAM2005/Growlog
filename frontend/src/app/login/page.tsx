@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import api from "../../api/client"
 import AuthShell from "../../components/shared/AuthShell"
+import { getApiErrorMessage } from "../../lib/api-error"
 import { setToken } from "../../lib/auth"
 
 export default function LoginPage() {
@@ -33,14 +34,7 @@ export default function LoginPage() {
       setToken(res.data.access_token as string)
       router.push("/dashboard")
     } catch (err: unknown) {
-      const detail =
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: { data?: { detail?: string } } }).response?.data?.detail === "string"
-          ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
-          : "Unable to sign in. Check your credentials and try again."
-      setError(detail)
+      setError(getApiErrorMessage(err, "Unable to sign in. Check your credentials and try again."))
     } finally {
       setIsSubmitting(false)
     }
