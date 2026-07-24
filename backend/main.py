@@ -43,7 +43,8 @@ _cors_origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins,
+    allow_origins=[] if "*" in _cors_origins else _cors_origins,
+    allow_origin_regex=".*" if (os.getenv("GROWLOG_ENV", "development") == "development" and "*" in _cors_origins) else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
