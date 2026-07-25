@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: growlog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: growlog
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d growlog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: growlog-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GROWLOG_ENV: development
+      GROWLOG_DATABASE_URL: postgresql://postgres:postgres123@postgres:5432/growlog
+      GROWLOG_JWT_SECRET: change-this-before-production
+      GROWLOG_JWT_ALGORITHM: HS256
+      GROWLOG_ACCESS_TOKEN_EXPIRE_MINUTES: 60
+      GROWLOG_LOG_LEVEL: INFO
+      GROWLOG_ENABLE_GIT_PUSH: "true"
+      GROWLOG_CORS_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: growlog-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
