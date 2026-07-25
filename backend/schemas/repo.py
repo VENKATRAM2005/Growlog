@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator
 
+
 class RepoInput(BaseModel):
     repo_url: str = Field(min_length=1, max_length=500)
 

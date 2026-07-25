@@ -6,20 +6,16 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
-from backend.database import engine, Base
-from backend.routers import auth, tasks, analytics
-from backend.schemas.common import ErrorResponse
-from backend.config import LOG_LEVEL, ENVIRONMENT
-
 from slowapi.middleware import SlowAPIMiddleware
-from backend.utils.rate_limit import limiter
-
-from backend.middleware.request_id import RequestIDMiddleware
-from backend.utils.request_context import get_request_id
-
 from sqlalchemy import text
-from backend.database import engine
+
+from backend.config import ENVIRONMENT, LOG_LEVEL
+from backend.database import Base, engine
+from backend.middleware.request_id import RequestIDMiddleware
+from backend.routers import analytics, auth, tasks
+from backend.schemas.common import ErrorResponse
+from backend.utils.rate_limit import limiter
+from backend.utils.request_context import get_request_id
 
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),

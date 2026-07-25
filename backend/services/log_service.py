@@ -5,10 +5,9 @@ from datetime import date, datetime
 
 from sqlalchemy.orm import Session
 
-from backend.models.task import Task, TaskStatus
 from backend.config import ENABLE_GIT_PUSH
+from backend.models.task import Task, TaskStatus
 from backend.services.git_service import git_commit_and_push
-
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 logger = logging.getLogger("growlog.logs")

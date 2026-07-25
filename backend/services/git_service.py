@@ -5,7 +5,6 @@ import os
 import subprocess
 from pathlib import Path
 
-
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_REPO_DIR = os.path.join(BACKEND_DIR, "user_repos")
 GIT_COMMAND_TIMEOUT_SECONDS = 15

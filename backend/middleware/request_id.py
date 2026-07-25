@@ -1,6 +1,5 @@
-from starlette.middleware.base import BaseHTTPMiddleware
-
 from backend.utils.request_context import new_request_id
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
