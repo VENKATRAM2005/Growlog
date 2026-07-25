@@ -1,7 +1,5 @@
 import logging
 import os
-import time
-import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -10,8 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.database import engine, Base
-from backend.models.user import User
-from backend.models.task import Task
 from backend.routers import auth, tasks, analytics
 from backend.schemas.common import ErrorResponse
 from backend.config import LOG_LEVEL, ENVIRONMENT
@@ -173,9 +169,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     )
 
 
-app.include_router(auth.router)
-app.include_router(tasks.router)
-app.include_router(analytics.router)
+app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
+app.include_router(tasks.router, prefix="/api/v1", tags=["Tasks"])
+app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
 
 @app.get("/")
 def root():

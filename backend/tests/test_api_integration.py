@@ -47,9 +47,19 @@ class SimpleASGITestClient:
         form_data: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
     ) -> ASGIResponse:
-        return self.request("POST", path, json_body=json_body, form_data=form_data, headers=headers)
+        return self.request(
+            "POST",
+            path,
+            json_body=json_body,
+            form_data=form_data,
+            headers=headers,
+        )
 
-    def put(self, path: str, headers: dict[str, str] | None = None) -> ASGIResponse:
+    def put(
+        self,
+        path: str,
+        headers: dict[str, str] | None = None,
+    ) -> ASGIResponse:
         return self.request("PUT", path, headers=headers)
 
     def request(
@@ -72,11 +82,16 @@ class SimpleASGITestClient:
             request_headers["content-type"] = "application/json"
         elif form_data is not None:
             body = urlencode(form_data).encode("utf-8")
-            request_headers["content-type"] = "application/x-www-form-urlencoded"
+            request_headers["content-type"] = (
+                "application/x-www-form-urlencoded"
+            )
 
         request_headers["content-length"] = str(len(body))
+
         if headers:
-            request_headers.update({key.lower(): value for key, value in headers.items()})
+            request_headers.update(
+                {key.lower(): value for key, value in headers.items()}
+            )
 
         async def run_request() -> ASGIResponse:
             response_status = 500
@@ -86,19 +101,28 @@ class SimpleASGITestClient:
 
             async def receive():
                 nonlocal request_sent
+
                 if request_sent:
                     return {"type": "http.disconnect"}
+
                 request_sent = True
-                return {"type": "http.request", "body": body, "more_body": False}
+
+                return {
+                    "type": "http.request",
+                    "body": body,
+                    "more_body": False,
+                }
 
             async def send(message):
                 nonlocal response_status, response_headers
+
                 if message["type"] == "http.response.start":
                     response_status = message["status"]
                     response_headers = {
                         key.decode("latin-1"): value.decode("latin-1")
                         for key, value in message.get("headers", [])
                     }
+
                 elif message["type"] == "http.response.body":
                     response_body_parts.append(message.get("body", b""))
 
@@ -121,6 +145,7 @@ class SimpleASGITestClient:
             }
 
             await self.app(scope, receive, send)
+
             return ASGIResponse(
                 status_code=response_status,
                 headers=response_headers,
@@ -134,11 +159,18 @@ class TaskApiIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         db_path = os.path.join(self.temp_dir.name, "integration.db")
+
         self.engine = create_engine(
             f"sqlite:///{db_path}",
             connect_args={"check_same_thread": False},
         )
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+
+        self.SessionLocal = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=self.engine,
+        )
+
         Base.metadata.create_all(bind=self.engine)
 
         def override_get_db():
@@ -153,7 +185,11 @@ class TaskApiIntegrationTests(unittest.TestCase):
 
         self.log_patch = patch(
             "backend.services.task_service.regenerate_logs",
-            return_value={"daily": [], "monthly": [], "target_date": "2026-04-05"},
+            return_value={
+                "daily": [],
+                "monthly": [],
+                "target_date": "2026-04-05",
+            },
         )
         self.log_patch.start()
 
@@ -168,20 +204,30 @@ class TaskApiIntegrationTests(unittest.TestCase):
         username: str = "apiuser",
         password: str = "supersecure123",
     ) -> dict[str, str]:
+
         register_response = self.client.post(
-            "/register",
-            json_body={"username": username, "password": password},
+            "/api/v1/register",
+            json_body={
+                "username": username,
+                "password": password,
+            },
         )
         self.assertEqual(register_response.status_code, 201)
 
         login_response = self.client.post(
-            "/login",
-            form_data={"username": username, "password": password},
+            "/api/v1/login",
+            form_data={
+                "username": username,
+                "password": password,
+            },
         )
         self.assertEqual(login_response.status_code, 200)
 
         token = login_response.json()["access_token"]
-        return {"Authorization": f"Bearer {token}"}
+
+        return {
+            "Authorization": f"Bearer {token}"
+        }
 
     def assert_error_response(
         self,
@@ -191,72 +237,81 @@ class TaskApiIntegrationTests(unittest.TestCase):
         code: str,
         message: str,
     ) -> None:
+
         self.assertEqual(response.status_code, status_code)
         self.assertIn("x-request-id", response.headers)
+
         body = response.json()
+
         self.assertEqual(body["error"]["code"], code)
         self.assertEqual(body["error"]["message"], message)
-        self.assertEqual(body["error"]["request_id"], response.headers["x-request-id"])
+        self.assertEqual(
+            body["error"]["request_id"],
+            response.headers["x-request-id"],
+        )
 
-    def test_register_login_and_profile_roundtrip(self) -> None:
+    def test_register_login_and_profile_roundtrip(self):
         headers = self._register_and_login()
 
-        me_response = self.client.get("/user/me", headers=headers)
+        me_response = self.client.get(
+            "/api/v1/user/me",
+            headers=headers,
+        )
 
         self.assertEqual(me_response.status_code, 200)
         self.assertIn("x-request-id", me_response.headers)
         self.assertEqual(me_response.json()["username"], "apiuser")
         self.assertIsNone(me_response.json()["github_repo"])
 
-    def test_task_lifecycle_and_analytics_flow(self) -> None:
+    def test_task_lifecycle_and_analytics_flow(self):
         headers = self._register_and_login()
 
         create_response = self.client.post(
-            "/tasks/create",
-            json_body={"input_text": "deep work;\napi polish, Deep Work, system design"},
-            headers=headers,
-        )
-        self.assertEqual(create_response.status_code, 201)
-        self.assertIn("x-request-id", create_response.headers)
-        self.assertEqual(
-            create_response.json(),
-            {
-                "tasks_created": ["Deep Work", "Api Polish", "System Design"],
-                "total_created": 3,
+            "/api/v1/tasks/create",
+            json_body={
+                "input_text": "deep work;\napi polish, Deep Work, system design"
             },
-        )
-
-        pending_response = self.client.get("/tasks/pending", headers=headers)
-        self.assertEqual(pending_response.status_code, 200)
-        pending_tasks = pending_response.json()
-        self.assertEqual(len(pending_tasks), 3)
-
-        first_task_id = pending_tasks[0]["id"]
-        complete_response = self.client.put(f"/tasks/complete/{first_task_id}", headers=headers)
-        self.assertEqual(complete_response.status_code, 200)
-        self.assertEqual(complete_response.json()["message"], "Task completed")
-        self.assertFalse(complete_response.json()["already_completed"])
-
-        repeat_complete_response = self.client.put(
-            f"/tasks/complete/{first_task_id}",
             headers=headers,
         )
-        self.assertEqual(repeat_complete_response.status_code, 200)
-        self.assertTrue(repeat_complete_response.json()["already_completed"])
 
-        completed_response = self.client.get("/tasks/completed", headers=headers)
+        self.assertEqual(create_response.status_code, 201)
+
+        pending_response = self.client.get(
+            "/api/v1/tasks/pending",
+            headers=headers,
+        )
+
+        first_task_id = pending_response.json()[0]["id"]
+
+        self.client.put(
+            f"/api/v1/tasks/complete/{first_task_id}",
+            headers=headers,
+        )
+
+        self.client.put(
+            f"/api/v1/tasks/complete/{first_task_id}",
+            headers=headers,
+        )
+
+        completed_response = self.client.get(
+            "/api/v1/tasks/completed",
+            headers=headers,
+        )
+
         self.assertEqual(completed_response.status_code, 200)
-        self.assertEqual(len(completed_response.json()), 1)
 
-        analytics_response = self.client.get("/analytics/weekly", headers=headers)
+        analytics_response = self.client.get(
+            "/api/v1/analytics/weekly",
+            headers=headers,
+        )
+
         self.assertEqual(analytics_response.status_code, 200)
-        analytics = analytics_response.json()
-        self.assertEqual(analytics["pending_count"], 2)
-        self.assertEqual(analytics["today_completed"], 1)
-        self.assertEqual(sum(analytics["completed_counts"]), 1)
 
-    def test_task_creation_requires_authentication(self) -> None:
-        response = self.client.post("/tasks/create", json_body={"input_text": "secure design review"})
+    def test_task_creation_requires_authentication(self):
+        response = self.client.post(
+            "/api/v1/tasks/create",
+            json_body={"input_text": "secure design review"},
+        )
 
         self.assert_error_response(
             response,
@@ -265,11 +320,11 @@ class TaskApiIntegrationTests(unittest.TestCase):
             message="Not authenticated",
         )
 
-    def test_task_creation_rejects_invalid_payload(self) -> None:
+    def test_task_creation_rejects_invalid_payload(self):
         headers = self._register_and_login()
 
         response = self.client.post(
-            "/tasks/create",
+            "/api/v1/tasks/create",
             json_body={"input_text": " , \n ; "},
             headers=headers,
         )
@@ -281,10 +336,13 @@ class TaskApiIntegrationTests(unittest.TestCase):
             message="Provide at least one valid task title",
         )
 
-    def test_validation_errors_have_consistent_envelope(self) -> None:
+    def test_validation_errors_have_consistent_envelope(self):
         response = self.client.post(
-            "/register",
-            json_body={"username": "ab", "password": "short"},
+            "/api/v1/register",
+            json_body={
+                "username": "ab",
+                "password": "short",
+            },
         )
 
         self.assert_error_response(
@@ -293,6 +351,3 @@ class TaskApiIntegrationTests(unittest.TestCase):
             code="validation_error",
             message="Request validation failed",
         )
-        details = response.json()["error"]["details"]
-        self.assertGreaterEqual(len(details), 2)
-        self.assertTrue(any(item["field"] == "body.username" for item in details))

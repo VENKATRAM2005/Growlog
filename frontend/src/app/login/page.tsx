@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,9 +16,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
   const router = useRouter()
 
-  async function handleLogin() {
+  async function handleLogin(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault()
+
+    if (isSubmitting) return
+
     setError(null)
     setIsSubmitting(true)
 
@@ -28,13 +33,20 @@ export default function LoginPage() {
       formData.append("password", password)
 
       const res = await api.post("/login", formData, {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
       })
 
       setToken(res.data.access_token as string)
       router.push("/dashboard")
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Unable to sign in. Check your credentials and try again."))
+      setError(
+        getApiErrorMessage(
+          err,
+          "Unable to sign in. Check your credentials and try again."
+        )
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -49,12 +61,14 @@ export default function LoginPage() {
       footerLinkLabel="Create one"
       footerHref="/register"
     >
-      <div className="space-y-4">
+      <form className="space-y-4" onSubmit={handleLogin}>
         <Input
           placeholder="Username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           className="h-12 rounded-2xl border-white/10 bg-background/55"
+          autoComplete="username"
+          required
         />
 
         <Input
@@ -63,18 +77,35 @@ export default function LoginPage() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="h-12 rounded-2xl border-white/10 bg-background/55"
+          autoComplete="current-password"
+          required
         />
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error && (
+          <p className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
 
-        <Button className="h-12 w-full rounded-2xl" onClick={handleLogin} disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-2xl"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Logging in..." : "Log in"}
         </Button>
 
         <p className="text-sm text-muted-foreground">
-          First time here? You can also <Link href="/register" className="font-medium text-foreground">create an account</Link>.
+          First time here?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-foreground"
+          >
+            Create an account
+          </Link>
+          .
         </p>
-      </div>
+      </form>
     </AuthShell>
   )
 }

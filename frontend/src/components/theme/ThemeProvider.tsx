@@ -12,6 +12,7 @@ type Theme = "light" | "dark"
 
 type ThemeContextValue = {
   theme: Theme
+  mounted: boolean
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
 }
@@ -21,50 +22,62 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark")
   document.documentElement.dataset.theme = theme
-  window.localStorage.setItem("growlog-theme", theme)
+  localStorage.setItem("growlog-theme", theme)
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") {
-      return "dark"
-    }
-
-    const storedTheme = window.localStorage.getItem("growlog-theme")
-    if (storedTheme === "light" || storedTheme === "dark") {
-      return storedTheme
-    }
-
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-  })
+export function ThemeProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [mounted, setMounted] = useState(false)
+  const [theme, setThemeState] = useState<Theme>("dark")
 
   useEffect(() => {
-    applyTheme(theme)
-  }, [theme])
+    const stored = localStorage.getItem("growlog-theme")
+
+    const initialTheme =
+      stored === "light" || stored === "dark"
+        ? stored
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+
+    setThemeState(initialTheme)
+    applyTheme(initialTheme)
+    setMounted(true)
+  }, [])
 
   const value = useMemo(
     () => ({
       theme,
-      setTheme: (nextTheme: Theme) => {
+      mounted,
+      setTheme(nextTheme: Theme) {
         setThemeState(nextTheme)
         applyTheme(nextTheme)
       },
-      toggleTheme: () => {
-        const nextTheme = theme === "dark" ? "light" : "dark"
-        setThemeState(nextTheme)
-        applyTheme(nextTheme)
+      toggleTheme() {
+        const next = theme === "dark" ? "light" : "dark"
+        setThemeState(next)
+        applyTheme(next)
       },
     }),
-    [theme]
+    [theme, mounted]
   )
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  )
 }
 
 export function useTheme() {
   const context = useContext(ThemeContext)
+
   if (!context) {
     throw new Error("useTheme must be used within ThemeProvider")
   }
+
   return context
 }

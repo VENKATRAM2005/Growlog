@@ -17,19 +17,24 @@ import { calculateCompletionRate, calculateMomentumScore, calculateStreak, getPe
 import { useWorkspaceSession } from "../../lib/use-workspace-session"
 
 export default function TodayPage() {
-  const session = useWorkspaceSession({ requireRepo: true })
+  const session = useWorkspaceSession({
+  requireRepo: false,
+  })
   const pendingTasks = usePendingTasks()
   const completedTasks = useCompletedTasks()
   const weeklyAnalytics = useWeeklyAnalytics()
   const monthlyAnalytics = useMonthlyAnalytics()
 
-  if (!session.token || session.isCheckingSession || session.requiresSetup) {
-    return (
-      <div className="px-3 py-3 md:px-4 md:py-4">
-        <LoadingState title="Loading Today" description="Checking your session and preparing your focus view." />
-      </div>
-    )
-  }
+if (!session.token || session.isCheckingSession) {
+  return (
+    <div className="px-3 py-3 md:px-4 md:py-4">
+      <LoadingState
+        title="Loading Today"
+        description="Checking your session and preparing your focus view."
+      />
+    </div>
+  )
+}
 
   if (!session.user) {
     return null
@@ -79,6 +84,29 @@ export default function TodayPage() {
             </>
           }
         />
+
+        {!session.user.github_repo && (
+          <div className="rounded-3xl border border-amber-500/20 bg-amber-500/10 p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold">
+                   Connect GitHub later
+                </h3>
+
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Growlog works perfectly without GitHub. Connect a repository anytime
+                  to generate proof-of-progress logs and archive completed work.
+                </p>
+              </div>
+
+              <Button asChild className="rounded-full">
+                <Link href="/setup-repo">
+                  Connect GitHub
+                </Link>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
           <div className="section-shell hero-glow border-white/10">

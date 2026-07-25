@@ -41,20 +41,25 @@ export default function SetupRepoPage() {
       .finally(() => setIsCheckingAuth(false))
   }, [router])
 
-  async function handleSaveRepo() {
-    setError(null)
-    setSuccess(null)
-    setIsSaving(true)
+async function handleSaveRepo() {
+  setError(null)
+  setSuccess(null)
+  setIsSaving(true)
 
-    try {
-      await api.post("/set-repo", { repo_url: repoUrl })
-      setConnectedRepo(repoUrl)
-      setSuccess("Repository connected successfully.")
-    } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to save repository"))
-    } finally {
-      setIsSaving(false)
-    }
+  try {
+    await api.post("/set-repo", { repo_url: repoUrl })
+
+    setConnectedRepo(repoUrl)
+    setSuccess("Repository connected successfully.")
+
+    setTimeout(() => {
+      router.push("/dashboard")
+    }, 1000)
+  } catch (err: unknown) {
+    setError(getApiErrorMessage(err, "Failed to save repository"))
+  } finally {
+    setIsSaving(false)
+  }
   }
 
   if (isCheckingAuth) {
@@ -125,7 +130,13 @@ export default function SetupRepoPage() {
               </div>
             ) : null}
 
-            <div className="mt-6 space-y-4">
+            <form
+              className="mt-6 space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                handleSaveRepo()
+              }}
+            >
               <div className="relative">
                 <Link2 className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-primary" />
                 <Input
@@ -150,8 +161,12 @@ export default function SetupRepoPage() {
                 variant="outline"
                 onClick={() => router.push("/dashboard")}
               >
-                Continue to dashboard
+                Continue without GitHub
               </Button>
+
+<p className="text-center text-sm text-muted-foreground">
+  You can connect a GitHub repository later from <span className="font-medium">Settings</span>.
+</p>
             </div>
           </section>
         </div>
