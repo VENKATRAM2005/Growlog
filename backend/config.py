@@ -15,9 +15,7 @@ SECRET_KEY = os.getenv(
 )
 
 if ENVIRONMENT == "production" and not SECRET_KEY:
-    raise RuntimeError(
-        "GROWLOG_JWT_SECRET must be set in production."
-    )
+    raise RuntimeError("GROWLOG_JWT_SECRET must be set in production.")
 
 if not SECRET_KEY:
     SECRET_KEY = "change-this-before-production"
@@ -40,10 +38,7 @@ LOG_LEVEL = os.getenv(
 )
 
 ENABLE_GIT_PUSH = (
-    os.getenv("GROWLOG_ENABLE_GIT_PUSH", "false")
-    .strip()
-    .lower()
-    == "true"
+    os.getenv("GROWLOG_ENABLE_GIT_PUSH", "false").strip().lower() == "true"
 )
 
 # Compatibility aliases

@@ -23,16 +23,13 @@ def register(
     request: Request,
     user: UserCreate,
     db: Session = Depends(get_db),
-    ):
+):
     existing_user = db.query(User).filter(User.username == user.username).first()
 
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    new_user = User(
-        username=user.username,
-        password_hash=hash_password(user.password)
-    )
+    new_user = User(username=user.username, password_hash=hash_password(user.password))
 
     db.add(new_user)
     db.commit()
@@ -47,17 +44,13 @@ def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
-    ):
+):
     invalid_credentials = HTTPException(
         status_code=401,
         detail="Invalid username or password",
     )
 
-    user = (
-        db.query(User)
-        .filter(User.username == form_data.username)
-        .first()
-    )
+    user = db.query(User).filter(User.username == form_data.username).first()
 
     if user is None:
         raise invalid_credentials
@@ -76,11 +69,12 @@ def login(
         "token_type": "bearer",
     }
 
+
 @router.post("/set-repo", response_model=MessageResponse)
 def set_github_repo(
     repo: RepoInput,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
 
     current_user.github_repo = repo.repo_url

@@ -82,9 +82,7 @@ class SimpleASGITestClient:
             request_headers["content-type"] = "application/json"
         elif form_data is not None:
             body = urlencode(form_data).encode("utf-8")
-            request_headers["content-type"] = (
-                "application/x-www-form-urlencoded"
-            )
+            request_headers["content-type"] = "application/x-www-form-urlencoded"
 
         request_headers["content-length"] = str(len(body))
 
@@ -225,9 +223,7 @@ class TaskApiIntegrationTests(unittest.TestCase):
 
         token = login_response.json()["access_token"]
 
-        return {
-            "Authorization": f"Bearer {token}"
-        }
+        return {"Authorization": f"Bearer {token}"}
 
     def assert_error_response(
         self,

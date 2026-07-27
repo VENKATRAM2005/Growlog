@@ -23,6 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("growlog.api")
 
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
@@ -34,6 +35,7 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
 
 @app.get("/ready", tags=["Infrastructure"])
 def readiness():
@@ -60,6 +62,7 @@ def readiness():
             },
         )
 
+
 @app.get("/health", tags=["Infrastructure"])
 def health():
     return {
@@ -67,6 +70,7 @@ def health():
         "service": "Growlog API",
         "environment": ENVIRONMENT,
     }
+
 
 app.state.limiter = limiter
 
@@ -83,7 +87,12 @@ _cors_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[] if "*" in _cors_origins else _cors_origins,
-    allow_origin_regex=".*" if (os.getenv("GROWLOG_ENV", "development") == "development" and "*" in _cors_origins) else None,
+    allow_origin_regex=".*"
+    if (
+        os.getenv("GROWLOG_ENV", "development") == "development"
+        and "*" in _cors_origins
+    )
+    else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -116,6 +125,7 @@ def _error_response(
         content=payload.model_dump(exclude_none=True),
         headers={"X-Request-ID": request_id},
     )
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -168,6 +178,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(tasks.router, prefix="/api/v1", tags=["Tasks"])
 app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
+
 
 @app.get("/")
 def root():

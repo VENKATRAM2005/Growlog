@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from backend.models.task import Task, TaskStatus
 from backend.schemas.analytics import (
     AnalyticsResponse,
-    MonthlyAnalyticsResponse,
     DashboardAnalyticsResponse,
+    MonthlyAnalyticsResponse,
 )
 from backend.utils.dependencies import get_current_user, get_db
 
@@ -139,10 +139,7 @@ def monthly_analytics(
 
     _, last_day = calendar.monthrange(today.year, today.month)
 
-    days = [
-        date(today.year, today.month, day)
-        for day in range(1, last_day + 1)
-    ]
+    days = [date(today.year, today.month, day) for day in range(1, last_day + 1)]
 
     pending_count = (
         db.query(Task)
@@ -198,11 +195,7 @@ def dashboard_analytics(
         .count()
     )
 
-    total_tasks = (
-        db.query(Task)
-        .filter(Task.user_id == current_user.id)
-        .count()
-    )
+    total_tasks = db.query(Task).filter(Task.user_id == current_user.id).count()
 
     completed_tasks = (
         db.query(Task)
@@ -221,9 +214,7 @@ def dashboard_analytics(
         "current_streak": _current_streak(active),
         "longest_streak": _longest_streak(active),
         "active_days": len(active),
-        "completion_rate": round(
-            (completed_tasks / total_tasks) * 100, 1
-        )
+        "completion_rate": round((completed_tasks / total_tasks) * 100, 1)
         if total_tasks
         else 0.0,
     }

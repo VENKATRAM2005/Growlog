@@ -21,7 +21,9 @@ class AnalyticsAndTasksTests(unittest.TestCase):
     def setUp(self) -> None:
         # Use an in-memory DB for fast, isolated tests.
         self.engine = create_engine("sqlite:///:memory:")
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.SessionLocal = sessionmaker(
+            autocommit=False, autoflush=False, bind=self.engine
+        )
         Base.metadata.create_all(bind=self.engine)
 
         self.db = self.SessionLocal()
@@ -92,7 +94,9 @@ class AnalyticsAndTasksTests(unittest.TestCase):
         self.assertEqual(ctx.exception.status_code, 400)
 
     def test_parse_task_titles_rejects_too_many_items(self) -> None:
-        payload = ",".join(f"task {index}" for index in range(task_service.MAX_TASKS_PER_REQUEST + 1))
+        payload = ",".join(
+            f"task {index}" for index in range(task_service.MAX_TASKS_PER_REQUEST + 1)
+        )
 
         with self.assertRaises(HTTPException) as ctx:
             task_service.parse_task_titles(payload)
@@ -102,7 +106,9 @@ class AnalyticsAndTasksTests(unittest.TestCase):
 
     def test_parse_task_titles_rejects_overlong_title(self) -> None:
         with self.assertRaises(HTTPException) as ctx:
-            task_service.parse_task_titles("x" * (task_service.MAX_TASK_TITLE_LENGTH + 1))
+            task_service.parse_task_titles(
+                "x" * (task_service.MAX_TASK_TITLE_LENGTH + 1)
+            )
 
         self.assertEqual(ctx.exception.status_code, 400)
         self.assertIn("at most", ctx.exception.detail.lower())
@@ -118,8 +124,12 @@ class AnalyticsAndTasksTests(unittest.TestCase):
         self.db.commit()
         self.db.refresh(task)
 
-        first_result = complete_task(task_id=task.id, db=self.db, current_user=self.user)
-        second_result = complete_task(task_id=task.id, db=self.db, current_user=self.user)
+        first_result = complete_task(
+            task_id=task.id, db=self.db, current_user=self.user
+        )
+        second_result = complete_task(
+            task_id=task.id, db=self.db, current_user=self.user
+        )
 
         self.assertEqual(first_result["message"], "Task completed")
         self.assertFalse(first_result["already_completed"])
@@ -128,7 +138,9 @@ class AnalyticsAndTasksTests(unittest.TestCase):
         self.assertEqual(second_result["task"].status, "completed")
 
     def test_create_tasks_for_user_creates_normalized_records(self) -> None:
-        tasks = task_service.create_tasks_for_user(self.db, self.user, "deep work,   docs, Deep Work")
+        tasks = task_service.create_tasks_for_user(
+            self.db, self.user, "deep work,   docs, Deep Work"
+        )
 
         self.assertEqual([task.title for task in tasks], ["Deep Work", "Docs"])
 
@@ -148,4 +160,3 @@ class AnalyticsAndTasksTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

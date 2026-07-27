@@ -24,7 +24,9 @@ DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-@router.post("/create", response_model=TaskCreateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create", response_model=TaskCreateResponse, status_code=status.HTTP_201_CREATED
+)
 def create_tasks(
     payload: TaskCreateRequest,
     db: DbSession,

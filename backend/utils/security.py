@@ -29,9 +29,7 @@ def create_access_token(data: dict) -> str:
     if "sub" not in payload or not payload["sub"]:
         raise ValueError("JWT payload must contain 'sub'.")
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-    )
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload.update(
         {

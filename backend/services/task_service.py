@@ -49,7 +49,9 @@ def parse_task_titles(input_text: str) -> list[str]:
             )
 
     if not unique_titles:
-        raise HTTPException(status_code=400, detail="Provide at least one valid task title")
+        raise HTTPException(
+            status_code=400, detail="Provide at least one valid task title"
+        )
 
     return unique_titles
 
@@ -90,11 +92,7 @@ def list_tasks_for_user_by_status(db: Session, user, status: str) -> list[Task]:
 
 
 def complete_task_for_user(db: Session, user, task_id: int) -> tuple[Task, bool]:
-    task = (
-        db.query(Task)
-        .filter(Task.id == task_id, Task.user_id == user.id)
-        .first()
-    )
+    task = db.query(Task).filter(Task.id == task_id, Task.user_id == user.id).first()
 
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")

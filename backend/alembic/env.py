@@ -1,21 +1,19 @@
-from logging.config import fileConfig
 import os
 import sys
+from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Add project root to Python path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from backend.config import DATABASE_URL
-from backend.database import Base
 
 # Import ALL models here
-import backend.models.user
-import backend.models.task
+from backend.config import DATABASE_URL
+from backend.database import Base
 
 config = context.config
 
