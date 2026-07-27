@@ -1,13 +1,37 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+import os
 
-from config import DATABASE_URL
+DATABASE_URL = os.getenv(
+    "GROWLOG_DATABASE_URL",
+    "sqlite:///./growlog.db",
+)
 
-engine_kwargs = {}
-if DATABASE_URL.startswith("sqlite"):
-    engine_kwargs["connect_args"] = {"check_same_thread": False}
+SECRET_KEY = os.getenv(
+    "GROWLOG_JWT_SECRET",
+    "change-this-before-production",
+)
 
-engine = create_engine(DATABASE_URL, **engine_kwargs)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+ALGORITHM = os.getenv(
+    "GROWLOG_JWT_ALGORITHM",
+    "HS256",
+)
 
-Base = declarative_base()
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv(
+        "GROWLOG_ACCESS_TOKEN_EXPIRE_MINUTES",
+        "60",
+    )
+)
+
+ENVIRONMENT = os.getenv(
+    "GROWLOG_ENV",
+    "development",
+)
+
+LOG_LEVEL = os.getenv(
+    "GROWLOG_LOG_LEVEL",
+    "INFO",
+)
+
+# Backward-compatible aliases
+JWT_SECRET = SECRET_KEY
+JWT_ALGORITHM = ALGORITHM
