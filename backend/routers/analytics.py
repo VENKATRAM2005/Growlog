@@ -39,7 +39,60 @@ def _completed_counts_for_days(db: Session, user_id: int, days: list[date]) -> l
         )
         completed_counts.append(count)
     return completed_counts
+def _active_dates(db: Session, user_id: int) -> list[date]:
+    rows = (
+        db.query(Task.completed_at)
+        .filter(
+            Task.user_id == user_id,
+            Task.status == TaskStatus.COMPLETED,
+            Task.completed_at.isnot(None),
+        )
+        .order_by(Task.completed_at.asc())
+        .all()
+    )
 
+    return sorted({row[0].date() for row in rows})
+
+
+def _current_streak(active: list[date]) -> int:
+    if not active:
+        return 0
+
+    today = datetime.utcnow().date()
+
+    # If nothing completed today, allow streak ending yesterday.
+    if active[-1] == today:
+        current = today
+    elif active[-1] == today - timedelta(days=1):
+        current = today - timedelta(days=1)
+    else:
+        return 0
+
+    streak = 0
+    active_set = set(active)
+
+    while current in active_set:
+        streak += 1
+        current -= timedelta(days=1)
+
+    return streak
+
+
+def _longest_streak(active: list[date]) -> int:
+    if not active:
+        return 0
+
+    longest = 1
+    current = 1
+
+    for i in range(1, len(active)):
+        if active[i] == active[i - 1] + timedelta(days=1):
+            current += 1
+        else:
+            longest = max(longest, current)
+            current = 1
+
+    return max(longest, current)
 
 @router.get("/weekly", response_model=AnalyticsResponse)
 def weekly_analytics(
@@ -96,3 +149,63 @@ def monthly_analytics(
         "completed_counts": completed_counts,
     }
 
+@router.get("/dashboard", response_model=DashboardAnalyticsResponse)
+def dashboard_analytics(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    today = datetime.utcnow().date()
+
+    today_start, today_end = _day_range_utc(today)
+
+    today_completed = (
+        db.query(Task)
+        .filter(
+            Task.user_id == current_user.id,
+            Task.status == TaskStatus.COMPLETED,
+            Task.completed_at >= today_start,
+            Task.completed_at < today_end,
+        )
+        .count()
+    )
+
+    pending_count = (
+        db.query(Task)
+        .filter(
+            Task.user_id == current_user.id,
+            Task.status == TaskStatus.PENDING,
+        )
+        .count()
+    )
+
+    total_tasks = (
+        db.query(Task)
+        .filter(Task.user_id == current_user.id)
+        .count()
+    )
+
+    completed_tasks = (
+        db.query(Task)
+        .filter(
+            Task.user_id == current_user.id,
+            Task.status == TaskStatus.COMPLETED,
+        )
+        .count()
+    )
+
+    completion_rate = (
+        round((completed_tasks / total_tasks) * 100, 1)
+        if total_tasks
+        else 0.0
+    )
+
+    active = _active_dates(db, current_user.id)
+
+    return {
+        "today_completed": today_completed,
+        "pending_count": pending_count,
+        "current_streak": _current_streak(active),
+        "longest_streak": _longest_streak(active),
+        "active_days": len(active),
+        "completion_rate": completion_rate,
+    }
