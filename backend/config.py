@@ -5,10 +5,22 @@ DATABASE_URL = os.getenv(
     "sqlite:///./growlog.db",
 )
 
+ENVIRONMENT = os.getenv(
+    "GROWLOG_ENV",
+    "development",
+)
+
 SECRET_KEY = os.getenv(
     "GROWLOG_JWT_SECRET",
-    "change-this-before-production",
 )
+
+if ENVIRONMENT == "production" and not SECRET_KEY:
+    raise RuntimeError(
+        "GROWLOG_JWT_SECRET must be set in production."
+    )
+
+if not SECRET_KEY:
+    SECRET_KEY = "change-this-before-production"
 
 ALGORITHM = os.getenv(
     "GROWLOG_JWT_ALGORITHM",
@@ -22,16 +34,18 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
     )
 )
 
-ENVIRONMENT = os.getenv(
-    "GROWLOG_ENV",
-    "development",
-)
-
 LOG_LEVEL = os.getenv(
     "GROWLOG_LOG_LEVEL",
     "INFO",
 )
 
-# Backward-compatible aliases
+ENABLE_GIT_PUSH = (
+    os.getenv("GROWLOG_ENABLE_GIT_PUSH", "false")
+    .strip()
+    .lower()
+    == "true"
+)
+
+# Compatibility aliases
 JWT_SECRET = SECRET_KEY
 JWT_ALGORITHM = ALGORITHM
