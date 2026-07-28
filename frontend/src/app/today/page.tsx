@@ -118,7 +118,7 @@ if (!session.token || session.isCheckingSession) {
               Capture fast. Finish clean. Let the system prove you are moving.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">
-              Your best workday feels calm, not noisy. Add what matters, trim what doesn't, and make each close visible.
+              Your best workday feels calm, not noisy. Add what matters, trim what doesn&apos;t, and make each close visible.
             </p>
             <div className="mt-6">
               <TaskInputPanel />
@@ -225,7 +225,7 @@ if (!session.token || session.isCheckingSession) {
         <div className="section-shell border-white/10 bg-background/50">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <div className="text-sm uppercase tracking-[0.18em] text-muted-foreground">Today's queue</div>
+              <div className="text-sm uppercase tracking-[0.18em] text-muted-foreground">Today&apos;s queue</div>
               <h2 className="mt-2 text-2xl font-semibold">What is immediately in play</h2>
             </div>
             <Button asChild variant="ghost" className="rounded-full px-4">

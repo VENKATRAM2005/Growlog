@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
+import { createContext, useContext, useMemo, useState } from "react"
 
 type Theme = "light" | "dark"
 
@@ -19,7 +13,25 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") {
+    return "dark"
+  }
+
+  const stored = localStorage.getItem("growlog-theme")
+
+  if (stored === "light" || stored === "dark") {
+    return stored
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light"
+}
+
 function applyTheme(theme: Theme) {
+  if (typeof document === "undefined") return
+
   document.documentElement.classList.toggle("dark", theme === "dark")
   document.documentElement.dataset.theme = theme
   localStorage.setItem("growlog-theme", theme)
@@ -30,39 +42,29 @@ export function ThemeProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [mounted, setMounted] = useState(false)
-  const [theme, setThemeState] = useState<Theme>("dark")
-
-  useEffect(() => {
-    const stored = localStorage.getItem("growlog-theme")
-
-    const initialTheme =
-      stored === "light" || stored === "dark"
-        ? stored
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light"
-
-    setThemeState(initialTheme)
-    applyTheme(initialTheme)
-    setMounted(true)
-  }, [])
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const initial = getInitialTheme()
+    applyTheme(initial)
+    return initial
+  })
 
   const value = useMemo(
     () => ({
       theme,
-      mounted,
+      mounted: true,
       setTheme(nextTheme: Theme) {
-        setThemeState(nextTheme)
         applyTheme(nextTheme)
+        setThemeState(nextTheme)
       },
       toggleTheme() {
-        const next = theme === "dark" ? "light" : "dark"
-        setThemeState(next)
-        applyTheme(next)
+        setThemeState((current) => {
+          const next = current === "dark" ? "light" : "dark"
+          applyTheme(next)
+          return next
+        })
       },
     }),
-    [theme, mounted]
+    [theme]
   )
 
   return (

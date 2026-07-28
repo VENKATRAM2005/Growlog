@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { BarChart3, Command, FileText, ListTodo, Plus, Search, Settings2, TimerReset } from "lucide-react"
 
@@ -45,12 +45,15 @@ export default function CommandPalette() {
     }
   }, [])
 
-  const navigateAndClose = (href: string) => {
+const navigateAndClose = useCallback(
+  (href: string) => {
     router.push(href)
     setOpen(false)
     setComposeMode(false)
     setQuery("")
-  }
+  },
+  [router]
+)
 
   const actions = useMemo<PaletteAction[]>(
     () => [
@@ -100,7 +103,7 @@ export default function CommandPalette() {
         },
       },
     ],
-    [router]
+    [navigateAndClose]
   )
 
   const filteredActions = actions.filter((action) => {

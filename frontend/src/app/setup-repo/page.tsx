@@ -130,7 +130,7 @@ async function handleSaveRepo() {
               </div>
             ) : null}
 
-            <form
+                        <form
               className="mt-6 space-y-4"
               onSubmit={(e) => {
                 e.preventDefault()
@@ -152,11 +152,16 @@ async function handleSaveRepo() {
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               {success ? <p className="text-sm text-primary">{success}</p> : null}
 
-              <Button className="h-12 w-full rounded-2xl" onClick={handleSaveRepo} disabled={isSaving || !repoUrl.trim()}>
+              <Button
+                type="submit"
+                className="h-12 w-full rounded-2xl"
+                disabled={isSaving || !repoUrl.trim()}
+              >
                 {isSaving ? "Saving..." : "Save repository"}
               </Button>
 
               <Button
+                type="button"
                 className="h-12 w-full rounded-2xl"
                 variant="outline"
                 onClick={() => router.push("/dashboard")}
@@ -164,10 +169,11 @@ async function handleSaveRepo() {
                 Continue without GitHub
               </Button>
 
-<p className="text-center text-sm text-muted-foreground">
-  You can connect a GitHub repository later from <span className="font-medium">Settings</span>.
-</p>
-            </div>
+              <p className="text-center text-sm text-muted-foreground">
+                You can connect a GitHub repository later from{" "}
+                <span className="font-medium">Settings</span>.
+              </p>
+            </form>
           </section>
         </div>
       </div>
