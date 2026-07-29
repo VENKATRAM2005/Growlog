@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import calendar
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, UTC
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.models.task import Task, TaskStatus
@@ -11,6 +12,7 @@ from backend.schemas.analytics import (
     AnalyticsResponse,
     DashboardAnalyticsResponse,
     MonthlyAnalyticsResponse,
+    HeatmapDay,
 )
 from backend.utils.dependencies import get_current_user, get_db
 
@@ -22,30 +24,79 @@ def _day_range_utc(d: date) -> tuple[datetime, datetime]:
     end = start + timedelta(days=1)
     return start, end
 
+def _build_completed_counts(
+    db: Session,
+    user_id: int,
+    start_day: date,
+    end_day: date,
+) -> dict[date, int]:
+    start_dt, _ = _day_range_utc(start_day)
+    _, end_dt = _day_range_utc(end_day)
+
+    rows = (
+        db.query(
+            func.date(Task.completed_at),
+            func.count(Task.id),
+        )
+        .filter(
+            Task.user_id == user_id,
+            Task.status == TaskStatus.COMPLETED,
+            Task.completed_at.isnot(None),
+            Task.completed_at >= start_dt,
+            Task.completed_at < end_dt,
+        )
+        .group_by(func.date(Task.completed_at))
+        .all()
+    )
+
+    return {
+    (
+        completed_date
+        if isinstance(completed_date, date)
+        else date.fromisoformat(str(completed_date))
+    ): count
+    for completed_date, count in rows
+}
+
+def _fill_missing_days(
+    counts: dict[date, int],
+    start_day: date,
+    end_day: date,
+) -> list[HeatmapDay]:
+    result: list[HeatmapDay] = []
+
+    current = start_day
+
+    while current <= end_day:
+        result.append(
+            HeatmapDay(
+                date=current.isoformat(),
+                count=counts.get(current, 0),
+            )
+        )
+        current += timedelta(days=1)
+
+    return result
 
 def _completed_counts_for_days(
-    db: Session, user_id: int, days: list[date]
+    db: Session,
+    user_id: int,
+    days: list[date],
 ) -> list[int]:
-    completed_counts: list[int] = []
+    if not days:
+        return []
 
-    for d in days:
-        start, end = _day_range_utc(d)
+    counts = _build_completed_counts(
+        db,
+        user_id,
+        days[0],
+        days[-1],
+    )
 
-        count = (
-            db.query(Task)
-            .filter(
-                Task.user_id == user_id,
-                Task.status == TaskStatus.COMPLETED,
-                Task.completed_at.isnot(None),
-                Task.completed_at >= start,
-                Task.completed_at < end,
-            )
-            .count()
-        )
-
-        completed_counts.append(count)
-
-    return completed_counts
+    return [
+        counts.get(day, 0)
+        for day in days
+    ]
 
 
 def _active_dates(db: Session, user_id: int) -> list[date]:
@@ -166,6 +217,29 @@ def monthly_analytics(
         "completed_counts": completed_counts,
     }
 
+@router.get(
+    "/heatmap",
+    response_model=list[HeatmapDay],
+)
+def get_heatmap(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    end_day = datetime.utcnow().date()
+    start_day = end_day - timedelta(days=364)
+
+    counts = _build_completed_counts(
+        db,
+        current_user.id,
+        start_day,
+        end_day,
+    )
+
+    return _fill_missing_days(
+        counts,
+        start_day,
+        end_day,
+    )
 
 @router.get("/dashboard", response_model=DashboardAnalyticsResponse)
 def dashboard_analytics(
@@ -218,3 +292,4 @@ def dashboard_analytics(
         if total_tasks
         else 0.0,
     }
+

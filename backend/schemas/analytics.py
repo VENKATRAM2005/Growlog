@@ -11,6 +11,9 @@ class AnalyticsResponse(BaseModel):
 class MonthlyAnalyticsResponse(AnalyticsResponse):
     month: str
 
+class HeatmapDay(BaseModel):
+    date: str
+    count: int
 
 class DashboardAnalyticsResponse(BaseModel):
     today_completed: int
