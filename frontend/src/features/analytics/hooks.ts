@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
-import { getMonthlyAnalytics, getWeeklyAnalytics } from "./api"
-import { api } from "@/lib/api"
+import {
+  getMonthlyAnalytics,
+  getWeeklyAnalytics,
+  getHeatmap,
+  getDashboardAnalytics,
+  type HeatmapDay,
+  type DashboardAnalytics,
+} from "./api"
 
 export function useWeeklyAnalytics() {
   return useQuery({
@@ -16,19 +22,17 @@ export function useMonthlyAnalytics() {
   })
 }
 
-export interface HeatmapDay {
-  date: string
-  count: number
-}
-
 export function useHeatmap() {
   return useQuery({
     queryKey: ["analytics", "heatmap"],
-    queryFn: async () => {
-      const { data } = await api.get<HeatmapDay[]>("/analytics/heatmap")
-      return data
-    },
+    queryFn: getHeatmap,
     staleTime: 1000 * 60 * 10,
   })
 }
 
+export function useDashboardAnalytics() {
+  return useQuery({
+    queryKey: ["analytics", "dashboard"],
+    queryFn: getDashboardAnalytics,
+  })
+}

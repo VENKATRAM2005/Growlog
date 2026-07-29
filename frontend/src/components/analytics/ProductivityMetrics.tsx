@@ -3,13 +3,12 @@
 import { Flame, Gauge, ListTodo, Target } from "lucide-react"
 
 import AppSurface from "../shared/AppSurface"
-import { useCompletedTasks, usePendingTasks } from "../../features/tasks/hooks"
-import { useMonthlyAnalytics } from "../../features/analytics/hooks"
+import { usePendingTasks } from "../../features/tasks/hooks"
+import { useDashboardAnalytics } from "../../features/analytics/hooks"
 
 export default function ProductivityMetrics() {
-  const { data, isLoading, isError, error } = useMonthlyAnalytics()
+  const { data, isLoading, isError, error } = useDashboardAnalytics()
   const { data: pendingTasks } = usePendingTasks()
-  const { data: completedTasks } = useCompletedTasks()
 
   if (isLoading) {
     return <AppSurface className="text-sm text-muted-foreground">Loading your momentum snapshot...</AppSurface>
@@ -24,13 +23,12 @@ export default function ProductivityMetrics() {
     )
   }
 
-  const todayCompleted = data?.today_completed ?? 0
-  const pendingCount = data?.pending_count ?? 0
-  const completedCount = completedTasks?.length ?? 0
-  const totalTracked = pendingCount + completedCount
-  const completionRate = totalTracked > 0 ? Math.round((completedCount / totalTracked) * 100) : 0
-  const weeklyBurst = Math.max(...(data?.completed_counts ?? [0]))
+  const dashboard = data
 
+const todayCompleted = dashboard?.today_completed ?? 0
+const pendingCount = dashboard?.pending_count ?? 0
+const completedCount = dashboard?.completed_tasks ?? 0
+const currentStreak = dashboard?.current_streak ?? 0
   const cards = [
     {
       title: "Completed today",
@@ -45,17 +43,17 @@ export default function ProductivityMetrics() {
       icon: ListTodo,
     },
     {
-      title: "Completion rate",
-      value: `${completionRate}%`,
-      caption: `${completedCount} of ${totalTracked || 0} tracked tasks finished.`,
-      icon: Gauge,
-    },
-    {
-      title: "Peak daily burst",
-      value: weeklyBurst,
-      caption: "Best daily output in the current analytics window.",
-      icon: Target,
-    },
+  title: "Completed Tasks",
+  value: completedCount,
+  caption: "Total tasks completed.",
+  icon: Target,
+},
+{
+  title: "Current Streak",
+  value: currentStreak,
+  caption: "Consecutive days with completed tasks.",
+  icon: Gauge,
+},
   ]
 
   return (

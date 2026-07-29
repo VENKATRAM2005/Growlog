@@ -283,13 +283,14 @@ def dashboard_analytics(
     active = _active_dates(db, current_user.id)
 
     return {
-        "today_completed": today_completed,
-        "pending_count": pending_count,
-        "current_streak": _current_streak(active),
-        "longest_streak": _longest_streak(active),
-        "active_days": len(active),
-        "completion_rate": round((completed_tasks / total_tasks) * 100, 1)
-        if total_tasks
-        else 0.0,
-    }
+    "today_completed": today_completed,
+    "pending_count": pending_count,
+    "completed_tasks": completed_tasks,
+    "current_streak": _current_streak(active),
+    "longest_streak": _longest_streak(active),
+    "active_days": len(active),
+    "completion_rate": round((completed_tasks / total_tasks) * 100, 1)
+    if total_tasks
+    else 0.0,
+}
 

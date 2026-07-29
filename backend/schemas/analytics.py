@@ -18,7 +18,11 @@ class HeatmapDay(BaseModel):
 class DashboardAnalyticsResponse(BaseModel):
     today_completed: int
     pending_count: int
+    completed_tasks: int
+
     current_streak: int
+
     longest_streak: int
+
     active_days: int
     completion_rate: float
