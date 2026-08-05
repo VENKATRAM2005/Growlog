@@ -5,7 +5,6 @@ import { useMemo } from "react"
 import { useHeatmap } from "@/features/analytics/hooks"
 
 const DAYS = 365
-const DAYS_PER_WEEK = 7
 
 type HeatmapCell = {
   date: string
@@ -48,7 +47,7 @@ function LoadingGrid() {
         {Array.from({ length: DAYS }).map((_, index) => (
           <div
             key={index}
-            className="size-3 rounded-sm animate-pulse bg-muted/40"
+            className="size-3 animate-pulse rounded-sm bg-muted/40"
           />
         ))}
       </div>
@@ -72,7 +71,6 @@ function buildWeeks(data: HeatmapCell[]): HeatmapWeek[] {
 
   const firstDay = new Date(data[0].date).getDay()
 
-  // Pad the first week so Sunday starts the column.
   for (let i = 0; i < firstDay; i++) {
     currentWeek.push(null)
   }
@@ -86,32 +84,15 @@ function buildWeeks(data: HeatmapCell[]): HeatmapWeek[] {
     }
   }
 
-  while (currentWeek.length < 7 && currentWeek.length > 0) {
+  while (currentWeek.length > 0 && currentWeek.length < 7) {
     currentWeek.push(null)
   }
 
-  if (currentWeek.length) {
+  if (currentWeek.length > 0) {
     weeks.push(currentWeek)
   }
 
   return weeks
-}
-
-function Legend() {
-  return (
-    <div className="mt-4 flex items-center justify-end gap-2 text-xs text-muted-foreground">
-      <span>Less</span>
-
-      {INTENSITY_CLASSES.map((colour, index) => (
-        <div
-          key={index}
-          className={`size-3 rounded-sm ${colour}`}
-        />
-      ))}
-
-      <span>More</span>
-    </div>
-  )
 }
 
 function buildMonthLabels(weeks: HeatmapWeek[]) {
@@ -140,24 +121,48 @@ function buildMonthLabels(weeks: HeatmapWeek[]) {
   return labels
 }
 
+function Legend() {
+  return (
+    <div className="mt-4 flex items-center justify-end gap-2 text-xs text-muted-foreground">
+      <span>Less</span>
+
+      {INTENSITY_CLASSES.map((colour, index) => (
+        <div
+          key={index}
+          className={`size-3 rounded-sm ${colour}`}
+        />
+      ))}
+
+      <span>More</span>
+    </div>
+  )
+}
+
 export default function ContributionHeatmap() {
   const { data, isLoading } = useHeatmap()
 
   const today = useMemo(
-  () => new Date().toISOString().slice(0, 10),
-  [],
-)
+    () => new Date().toISOString().slice(0, 10),
+    []
+  )
 
-  const cells = useMemo<HeatmapCell[]>(() => {
-    return (data ?? []).map((day) => ({
-      ...day,
-      isToday: day.date === today,
-    }))
-  }, [data, today])
+  const cells = useMemo<HeatmapCell[]>(
+    () =>
+      (data ?? []).map((day) => ({
+        ...day,
+        isToday: day.date === today,
+      })),
+    [data, today]
+  )
 
   const weeks = useMemo(
     () => buildWeeks(cells),
-    [cells],
+    [cells]
+  )
+
+  const monthLabels = useMemo(
+    () => buildMonthLabels(weeks),
+    [weeks]
   )
 
   if (isLoading) {
@@ -168,68 +173,62 @@ export default function ContributionHeatmap() {
     return <EmptyState />
   }
 
-const monthLabels = useMemo(
-  () => buildMonthLabels(weeks),
-  [weeks],
-)
+  return (
+    <div className="overflow-x-auto">
+      <div className="inline-block min-w-max">
+        <div
+          className="mb-2 grid text-xs text-muted-foreground"
+          style={{
+            gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {monthLabels.map((month) => (
+            <div
+              key={`${month.label}-${month.column}`}
+              style={{ gridColumnStart: month.column + 1 }}
+            >
+              {month.label}
+            </div>
+          ))}
+        </div>
 
-return (
-  <div className="overflow-x-auto">
-    <div className="inline-block min-w-max">
+        <div
+          role="grid"
+          className="flex gap-1"
+        >
+          {weeks.map((week, weekIndex) => (
+            <div
+              key={weekIndex}
+              className="flex flex-col gap-1"
+            >
+              {week.map((cell, dayIndex) =>
+                cell ? (
+                  <div
+                    key={cell.date}
+                    role="gridcell"
+                    title={formatTooltip(cell.date, cell.count)}
+                    aria-label={formatTooltip(cell.date, cell.count)}
+                    className={[
+                      "size-3 rounded-sm transition-all",
+                      INTENSITY_CLASSES[getIntensity(cell.count)],
+                      cell.isToday && cell.count > 0
+                        ? "animate-pulse ring-1 ring-primary"
+                        : "",
+                    ].join(" ")}
+                  />
+                ) : (
+                  <div
+                    key={`empty-${weekIndex}-${dayIndex}`}
+                    className="size-3"
+                  />
+                )
+              )}
+            </div>
+          ))}
+        </div>
 
-      <div
-        className="mb-2 grid text-xs text-muted-foreground"
-        style={{
-          gridTemplateColumns: `repeat(${weeks.length}, minmax(0,1fr))`,
-        }}
-      >
-        {monthLabels.map((month) => (
-          <div
-            key={`${month.label}-${month.column}`}
-            style={{ gridColumnStart: month.column + 1 }}
-          >
-            {month.label}
-          </div>
-        ))}
+        <Legend />
       </div>
-
-      <div
-        role="grid"
-        className="flex gap-1"
-      >
-        {weeks.map((week, weekIndex) => (
-          <div
-            key={weekIndex}
-            className="flex flex-col gap-1"
-          >
-            {week.map((cell, dayIndex) =>
-              cell ? (
-                <div
-                  key={cell.date}
-                  role="gridcell"
-                  title={formatTooltip(cell.date, cell.count)}
-                  aria-label={formatTooltip(cell.date, cell.count)}
-                  className={[
-                    "size-3 rounded-sm transition-all",
-                    INTENSITY_CLASSES[getIntensity(cell.count)],
-                    cell.isToday && cell.count > 0
-                      ? "animate-pulse ring-1 ring-primary"
-                      : "",
-                  ].join(" ")}
-                />
-              ) : (
-                <div
-                  key={`empty-${weekIndex}-${dayIndex}`}
-                  className="size-3"
-                />
-              )
-            )}
-          </div>
-        ))}
-      </div>
-
-      <Legend />
     </div>
-  </div>
-)
+  )
 }

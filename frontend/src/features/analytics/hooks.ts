@@ -4,8 +4,6 @@ import {
   getWeeklyAnalytics,
   getHeatmap,
   getDashboardAnalytics,
-  type HeatmapDay,
-  type DashboardAnalytics,
 } from "./api"
 
 export function useWeeklyAnalytics() {

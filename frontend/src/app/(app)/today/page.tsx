@@ -1,21 +1,39 @@
 "use client"
-
 import { ArrowUpRight, CheckCircle2, ListTodo, Sparkles, Target } from "lucide-react"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
-import WeeklyActivityGraph from "../../components/analytics/WeeklyActivityGraph"
-import DashboardLayout from "../../components/layout/DashboardLayout"
-import { MetricCard } from "../../components/shared/MetricCard"
-import { PageHeader } from "../../components/shared/PageHeader"
-import { EmptyState, ErrorState, LoadingState } from "../../components/shared/PageState"
-import { SkeletonCard } from "../../components/shared/SkeletonCard"
-import TaskInputPanel from "../../components/tasks/TaskInputPanel"
-import { useMonthlyAnalytics, useWeeklyAnalytics } from "../../features/analytics/hooks"
-import { useCompletedTasks, usePendingTasks } from "../../features/tasks/hooks"
-import { calculateCompletionRate, calculateMomentumScore, calculateStreak, getPeakDay } from "../../lib/product-metrics"
-import { useWorkspaceSession } from "../../lib/use-workspace-session"
 
+import WeeklyActivityGraph from "@/components/analytics/WeeklyActivityGraph"
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import { MetricCard } from "@/components/shared/MetricCard"
+import { PageHeader } from "@/components/shared/PageHeader"
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "@/components/shared/PageState"
+import { SkeletonCard } from "@/components/shared/SkeletonCard"
+import TaskInputPanel from "@/components/tasks/TaskInputPanel"
+
+import {
+  useMonthlyAnalytics,
+  useWeeklyAnalytics,
+} from "@/features/analytics/hooks"
+
+import {
+  useCompletedTasks,
+  usePendingTasks,
+} from "@/features/tasks/hooks"
+
+import {
+  calculateCompletionRate,
+  calculateMomentumScore,
+  calculateStreak,
+  getPeakDay,
+} from "@/lib/product-metrics"
+
+import { useWorkspaceSession } from "@/lib/use-workspace-session"
 export default function TodayPage() {
   const session = useWorkspaceSession({
   requireRepo: false,

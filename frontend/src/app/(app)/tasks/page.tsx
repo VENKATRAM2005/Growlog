@@ -1,25 +1,37 @@
+
 "use client"
 
 import { useState } from "react"
-import { CheckCheck, CircleDot, Filter} from "lucide-react"
+import { CheckCheck, CircleDot, Filter } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import DashboardLayout from "../../components/layout/DashboardLayout"
-import { PageHeader } from "../../components/shared/PageHeader"
-import { EmptyState, ErrorState, LoadingState } from "../../components/shared/PageState"
-import TaskInputPanel from "../../components/tasks/TaskInputPanel"
-import { useCompleteTask, useCompletedTasks, usePendingTasks } from "../../features/tasks/hooks"
-import { useWorkspaceSession } from "../../lib/use-workspace-session"
+
+import DashboardLayout from "@/components/layout/DashboardLayout"
+import { PageHeader } from "@/components/shared/PageHeader"
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from "@/components/shared/PageState"
+import TaskInputPanel from "@/components/tasks/TaskInputPanel"
+
+import {
+  useCompleteTask,
+  useCompletedTasks,
+  usePendingTasks,
+} from "@/features/tasks/hooks"
+
+import { useWorkspaceSession } from "@/lib/use-workspace-session"
 
 type TaskFilter = "all" | "pending" | "completed"
 
 export default function TasksPage() {
   const session = useWorkspaceSession({ requireRepo: true })
   const [filter, setFilter] = useState<TaskFilter>("all")
+
   const pendingTasks = usePendingTasks()
   const completedTasks = useCompletedTasks()
   const completeTask = useCompleteTask()
-
   if (!session.token || session.isCheckingSession || session.requiresSetup) {
     return (
       <div className="px-3 py-3 md:px-4 md:py-4">
