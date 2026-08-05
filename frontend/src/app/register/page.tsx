@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,17 +14,31 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
   const router = useRouter()
 
-  async function handleRegister() {
+  async function handleRegister(e?: FormEvent<HTMLFormElement>) {
+    e?.preventDefault()
+
+    if (isSubmitting) return
+
     setError(null)
     setIsSubmitting(true)
 
     try {
-      await api.post("/register", { username, password })
+      await api.post("/register", {
+        username: username.trim(),
+        password,
+      })
+
       router.push("/login")
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Registration failed. Try a different username."))
+      setError(
+        getApiErrorMessage(
+          err,
+          "Registration failed. Try a different username."
+        )
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -39,27 +53,46 @@ export default function RegisterPage() {
       footerLinkLabel="Log in"
       footerHref="/login"
     >
-      <div className="space-y-4">
+      <form className="space-y-4" onSubmit={handleRegister}>
         <Input
           placeholder="Choose a username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           className="h-12 rounded-2xl border-white/10 bg-background/55"
+          autoComplete="username"
+          minLength={3}
+          required
         />
+
         <Input
           type="password"
           placeholder="Create a password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           className="h-12 rounded-2xl border-white/10 bg-background/55"
+          autoComplete="new-password"
+          minLength={8}
+          required
         />
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error && (
+          <p className="text-sm text-destructive">
+            {error}
+          </p>
+        )}
 
-        <Button className="h-12 w-full rounded-2xl" onClick={handleRegister} disabled={isSubmitting}>
+        <Button
+          type="submit"
+          className="h-12 w-full rounded-2xl"
+          disabled={
+            isSubmitting ||
+            username.trim().length < 3 ||
+            password.length < 8
+          }
+        >
           {isSubmitting ? "Creating account..." : "Create account"}
         </Button>
-      </div>
+      </form>
     </AuthShell>
   )
 }
