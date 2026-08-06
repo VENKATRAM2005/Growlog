@@ -11,9 +11,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <CommandPalette />
-        {children}
-      </QueryClientProvider>
+  {/* <CommandPalette /> */}
+  {children}
+</QueryClientProvider>
     </ThemeProvider>
   )
 }

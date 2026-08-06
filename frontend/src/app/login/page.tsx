@@ -61,7 +61,13 @@ export default function LoginPage() {
       footerLinkLabel="Create one"
       footerHref="/register"
     >
-      <form className="space-y-4" onSubmit={handleLogin}>
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          console.log("FORM SUBMITTED")
+          handleLogin(e)
+        }}
+      >
         <Input
           placeholder="Username"
           value={username}

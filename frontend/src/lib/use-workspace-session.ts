@@ -27,9 +27,18 @@ export function useWorkspaceSession(options: WorkspaceSessionOptions = {}) {
       return
     }
 
-    if (requireRepo && userQuery.data && !userQuery.data.github_repo) {
-      router.replace("/setup-repo")
-    }
+    const skipped =
+      typeof window !== "undefined" &&
+      localStorage.getItem("growlog-skip-repo") === "true"
+
+if (
+  requireRepo &&
+  userQuery.data &&
+  !userQuery.data.github_repo &&
+  !skipped
+) {
+  router.replace("/setup-repo")
+}
   }, [requireRepo, router, token, userQuery.data, userQuery.isError])
 
   return {

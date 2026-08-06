@@ -164,7 +164,10 @@ async function handleSaveRepo() {
                 type="button"
                 className="h-12 w-full rounded-2xl"
                 variant="outline"
-                onClick={() => router.push("/dashboard")}
+                onClick={() => {
+                    localStorage.setItem("growlog-skip-repo", "true")
+                    router.push("/dashboard")
+                }}
               >
                 Continue without GitHub
               </Button>

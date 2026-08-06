@@ -1,38 +1,50 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+
 import api from "../../api/client"
 import AuthShell from "../../components/shared/AuthShell"
 import { getApiErrorMessage } from "../../lib/api-error"
 
 export default function RegisterPage() {
+  const router = useRouter()
+
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const router = useRouter()
+  async function handleRegister(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
 
-  async function handleRegister(e?: FormEvent<HTMLFormElement>) {
-    e?.preventDefault()
+    console.log("REGISTER CLICKED")
 
-    if (isSubmitting) return
+    if (isSubmitting) {
+      console.log("Already submitting")
+      return
+    }
 
     setError(null)
     setIsSubmitting(true)
 
     try {
-      await api.post("/register", {
+      console.log("Sending request...")
+
+      const response = await api.post("/register", {
         username: username.trim(),
         password,
       })
 
+      console.log("SUCCESS", response.data)
+
       router.push("/login")
-    } catch (err: unknown) {
+    } catch (err) {
+      console.error("REGISTER ERROR", err)
+
       setError(
         getApiErrorMessage(
           err,
@@ -57,9 +69,9 @@ export default function RegisterPage() {
         <Input
           placeholder="Choose a username"
           value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          className="h-12 rounded-2xl border-white/10 bg-background/55"
+          onChange={(e) => setUsername(e.target.value)}
           autoComplete="username"
+          className="h-12 rounded-2xl border-white/10 bg-background/55"
           minLength={3}
           required
         />
@@ -68,9 +80,9 @@ export default function RegisterPage() {
           type="password"
           placeholder="Create a password"
           value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          className="h-12 rounded-2xl border-white/10 bg-background/55"
+          onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
+          className="h-12 rounded-2xl border-white/10 bg-background/55"
           minLength={8}
           required
         />
