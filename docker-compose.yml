@@ -34,7 +34,7 @@ services:
       GROWLOG_JWT_ALGORITHM: HS256
       GROWLOG_ACCESS_TOKEN_EXPIRE_MINUTES: 60
       GROWLOG_LOG_LEVEL: INFO
-      GROWLOG_ENABLE_GIT_PUSH: "true"
+      GROWLOG_ENABLE_GIT_PUSH: "false"
       GROWLOG_CORS_ORIGINS: http://localhost:3000
     ports:
       - "8000:8000"
