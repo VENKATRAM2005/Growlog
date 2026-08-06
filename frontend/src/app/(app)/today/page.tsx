@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 import WeeklyActivityGraph from "@/components/analytics/WeeklyActivityGraph"
-import DashboardLayout from "@/components/layout/DashboardLayout"
 import { MetricCard } from "@/components/shared/MetricCard"
 import { PageHeader } from "@/components/shared/PageHeader"
 import {
@@ -63,14 +62,12 @@ if (!session.token || session.isCheckingSession) {
 
   if (hasFatalError) {
     return (
-      <DashboardLayout>
-        <ErrorState
-          title="Today could not load"
-          description="We couldn't assemble your focus view right now. Try refreshing to pull the latest tasks and analytics."
-          actionLabel="Retry"
-          onAction={() => window.location.reload()}
-        />
-      </DashboardLayout>
+      <ErrorState
+        title="Today could not load"
+        description="We couldn't assemble your focus view right now. Try refreshing to pull the latest tasks and analytics."
+        actionLabel="Retry"
+        onAction={() => window.location.reload()}
+      />
     )
   }
 
@@ -85,8 +82,7 @@ if (!session.token || session.isCheckingSession) {
   const weeklyTotal = weekly?.completed_counts.reduce((sum, current) => sum + current, 0) ?? 0
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <PageHeader
           eyebrow={`Welcome back, ${session.user.username}`}
           title="Today"
@@ -275,7 +271,6 @@ if (!session.token || session.isCheckingSession) {
             />
           )}
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   )
 }

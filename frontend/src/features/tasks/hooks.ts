@@ -29,6 +29,7 @@ export function useCreateTasks() {
       queryClient.invalidateQueries({ queryKey: ["pendingTasks"] })
       queryClient.invalidateQueries({ queryKey: ["weeklyAnalytics"] })
       queryClient.invalidateQueries({ queryKey: ["monthlyAnalytics"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics", "dashboard"] })
     },
   })
 }
@@ -43,6 +44,7 @@ export function useCompleteTask() {
       queryClient.invalidateQueries({ queryKey: ["completedTasks"] })
       queryClient.invalidateQueries({ queryKey: ["weeklyAnalytics"] })
       queryClient.invalidateQueries({ queryKey: ["monthlyAnalytics"] })
+      queryClient.invalidateQueries({ queryKey: ["analytics", "dashboard"] })
     },
   })
 }

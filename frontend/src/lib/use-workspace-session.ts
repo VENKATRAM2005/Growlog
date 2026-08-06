@@ -15,6 +15,9 @@ export function useWorkspaceSession(options: WorkspaceSessionOptions = {}) {
   const router = useRouter()
   const token = getToken()
   const userQuery = useCurrentUser(Boolean(token))
+  const skipped =
+    typeof window !== "undefined" &&
+    localStorage.getItem("growlog-skip-repo") === "true"
 
   useEffect(() => {
     if (!token) {
@@ -27,10 +30,6 @@ export function useWorkspaceSession(options: WorkspaceSessionOptions = {}) {
       return
     }
 
-    const skipped =
-      typeof window !== "undefined" &&
-      localStorage.getItem("growlog-skip-repo") === "true"
-
 if (
   requireRepo &&
   userQuery.data &&
@@ -39,13 +38,13 @@ if (
 ) {
   router.replace("/setup-repo")
 }
-  }, [requireRepo, router, token, userQuery.data, userQuery.isError])
+  }, [requireRepo, router, skipped, token, userQuery.data, userQuery.isError])
 
   return {
     token,
     user: userQuery.data,
     isCheckingSession: Boolean(token) && userQuery.isLoading,
-    requiresSetup: requireRepo && Boolean(userQuery.data && !userQuery.data.github_repo),
+    requiresSetup: requireRepo && Boolean(userQuery.data && !userQuery.data.github_repo && !skipped),
     isAuthenticated: Boolean(token && userQuery.data),
     error: userQuery.error,
   }

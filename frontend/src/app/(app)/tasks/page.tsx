@@ -6,7 +6,6 @@ import { CheckCheck, CircleDot, Filter } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
-import DashboardLayout from "@/components/layout/DashboardLayout"
 import { PageHeader } from "@/components/shared/PageHeader"
 import {
   EmptyState,
@@ -46,14 +45,12 @@ export default function TasksPage() {
 
   if (pendingTasks.isError || completedTasks.isError) {
     return (
-      <DashboardLayout>
-        <ErrorState
-          title="Tasks could not load"
-          description="We couldn't fetch the latest task state. Refresh and try again."
-          actionLabel="Retry"
-          onAction={() => window.location.reload()}
-        />
-      </DashboardLayout>
+      <ErrorState
+        title="Tasks could not load"
+        description="We couldn't fetch the latest task state. Refresh and try again."
+        actionLabel="Retry"
+        onAction={() => window.location.reload()}
+      />
     )
   }
 
@@ -68,8 +65,7 @@ export default function TasksPage() {
   })
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4">
+    <div className="space-y-4">
         <PageHeader
           eyebrow="Queue management"
           title="Tasks"
@@ -197,7 +193,6 @@ export default function TasksPage() {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   )
 }
