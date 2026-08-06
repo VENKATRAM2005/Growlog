@@ -7,8 +7,7 @@ from backend.config import ALGORITHM, SECRET_KEY
 from backend.database import SessionLocal
 from backend.models.user import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 
 def get_db():
     db = SessionLocal()

@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).resolve().parent / ".env")
+DATABASE_URL = os.getenv("GROWLOG_DATABASE_URL")
 
-DATABASE_URL = os.getenv(
-    "GROWLOG_DATABASE_URL",
-    "sqlite:///./growlog.db",
-)
+if not DATABASE_URL:
+    raise RuntimeError("GROWLOG_DATABASE_URL is not set.")
 
 ENVIRONMENT = os.getenv(
     "GROWLOG_ENV",
