@@ -15,6 +15,9 @@ if PROJECT_ROOT not in sys.path:
 from backend.config import DATABASE_URL
 from backend.database import Base
 
+import backend.models.user
+import backend.models.task
+
 config = context.config
 
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
